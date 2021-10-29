@@ -1,0 +1,101 @@
+﻿@model IEnumerable<HotelBooking.Models.Room>
+
+@{
+    ViewBag.Title = "Index2";
+}
+
+<h2>Index2</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table" id="myTable">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.RoomType.Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.HotelBrunch.Name)
+        </th>
+        <th>
+            Status
+            @*@Html.DisplayNameFor(model => model.BookStatusId)*@
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.RoomType.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.HotelBrunch.Name)
+            </td>
+            <td>
+                @{
+                    <div class="custom-checkbox" id="myDiv">
+                        @if (item.BookStatusId == 1)
+                        {
+                            //Available Room :
+                            <input type="checkbox" id="check_@item.Id" />
+                            <label for="check_@item.Id">@item.HotelBrunch.Name&nbsp;&nbsp;&nbsp;@item.RoomType.Name  </label>
+                        }
+                        else
+                        {
+                            //Already Booked
+                            <input type="checkbox" id="check_@item.Id" checked />
+                            <label for="check_@item.Id">@item.HotelBrunch.Name&nbsp;&nbsp;&nbsp;@item.RoomType.Name  </label>
+                        }
+                    </div>
+                }
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
+                @Html.ActionLink("Details", "Details", new { id = item.Id }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+            </td>
+        </tr>
+    }
+
+</table>
+<button class="btn btn-primary" onclick="SaveList()">Save </button>
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script>
+  
+    var SaveList = function () {
+
+        var arrItems = [];
+        var commaSeperatedArray = "";
+
+        $("#myTable div input[type=checkbox]").each(function (index, val) {
+            debugger
+          //  check_1 , check_2,...
+            var checkId = $(val).attr("Id");
+           // ['check','1'],['check','2'],...
+            var splitIds = checkId.split('_');
+           // [1],[2],...
+            var currentCheckBoxId = splitIds[1];
+            var isChecked = $("#" + checkId).is(":checked", true);
+            if (isChecked) {
+                arrItems.push(currentCheckBoxId);
+            }
+        })
+
+        if (arrItems.length != 0) {
+            //Call Ajax :
+           // [1,2,3,4]
+            commaSeperatedArray = arrItems.toString();
+            $.ajax({
+                type: "GET",
+                url: "/Rooms/GetRoomsIds",
+                data: { roomsIds: commaSeperatedArray },
+                success: function (response) {
+                }
+            });
+        }
+    }
+
+</script>
+

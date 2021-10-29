@@ -1,0 +1,151 @@
+﻿@model HotelBooking.ViewModels.BookingViewModel
+
+@{
+    ViewBag.Title = "Index";
+}
+
+
+
+<form id="myForm" method="post">
+    <div class="alert alert-danger mt-4">
+        @ViewBag.Error   
+    </div>
+    @*   @Html.AntiForgeryToken()*@
+    @*  @Html.ValidationSummary(true, "", new { @class = "text-danger" })*@
+    <hr />
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            Room Booking ...
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6">
+                    @*  @Html.TextBoxFor(x => x.BookingHeader.NetPrice, new { id = "netPrice" })*@
+                    <img src="~/Uploads/Hotel.jpg"  class="img-thumbnail" style="height:97%"/>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <input type="search" id="search" class="form-control" placeholder="Search Here ..." />
+                        <img src="~/Uploads/loader.gif" style="width:100px; height:100px; display:none" id="loader" />
+                    </div>
+                    <div class="form-group" id="myDivLoadPartial">
+                        <ul class="list-group">
+                            <li class="list-group-item active">Choose Rooms You Want ! </li>
+                            @if (ViewBag.roomList != null)
+                            {
+                                foreach (var item in ViewBag.roomList)
+                                {
+                                    <li class="list-group-item">
+                                        <div class="custom-checkbox">
+                                            @if (item.BookStatusId == 1)
+                                            {
+                                                //Available Room :
+                                                <input type="checkbox" id="check_@item.Id" />
+                                                <label for="check_@item.Id">@item.HotelBrunch.Name&nbsp;&nbsp;&nbsp;@item.RoomType.Name  </label>
+                                            }
+                                            else
+                                            {
+                                                //Already Booked
+                                                <input type="checkbox" id="check_@item.Id" checked />
+                                                <label for="check_@item.Id">@item.HotelBrunch.Name&nbsp;&nbsp;&nbsp;@item.RoomType.Name  </label>
+                                            }
+                                        </div>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer card">
+            <div class="text-right offset-8 col-4 ">
+                <button type="button" onclick="SaveList()" class="btn btn-success  btn-block ">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+    <hr />
+</form>
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#search").keyup(function () {
+            $("#loader").show();
+            var textSearched = $(this).val();
+            $.ajax({
+                type: "POST",
+                url: "/Booking/SearchList/",
+                data: { text: textSearched },
+                success: function (response) {
+                    $("#myDivLoadPartial").html(response);
+                    $("#loader").hide();
+                }
+            });
+        });
+    })
+
+    var SaveList = function () {
+        var myFormData = $("#myForm").serialize();
+        var arrItems = [];
+        var commaSeperatedArray = "";
+        $("#myDivLoadPartial div input[type=checkbox]").each(function (index, val) {
+            //  check_1 , check_2,...
+            var checkId = $(val).attr("Id");
+            // ['check','1'],['check','2'],...
+            var splitIds = checkId.split('_');
+            // [1],[2],...
+            var currentCheckBoxId = splitIds[1];
+            var isChecked = $("#" + checkId).is(":checked", true);
+            if (isChecked) {
+                arrItems.push(currentCheckBoxId);
+            }
+        })
+        if (arrItems.length != 0) {
+            //Call Ajax :
+            // [1,2,3,4]
+            commaSeperatedArray = arrItems.toString();
+            debugger
+            //var data = { BookingHeader.NetPrice: $("#BookingHeader_NetPrice").val(), StockName: $("#StockName").val(), StockPrice: $("#StockPrice").val() };
+            var dataObject = {
+                //'BookingHeader.NetPrice': $('#netPrice').val(),
+                'roomsIds': commaSeperatedArray,
+            };
+            //'bvm': myFormData,
+            // 'BookingHeader.NetPrice': $('#netPrice').val(),
+            //roomsIds: commaSeperatedArray
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: "/Booking/Index",
+                data: dataObject,
+                // contentType: 'application/json',
+                //data: JSON.stringify(dataObject),
+                success: function (response) {
+                    debugger
+                    if (response.result == 0) {
+                        alert("Not Login User");
+                        window.location.href = "/Home/Index";
+                    } else if (response.result == 1) {
+                        alert("Booked Done Successfully ! ");
+                        window.location.href = "/Rooms/Index";
+                    } else if (response.result == 2) {
+                        alert("User Wallet Don't have much money .. please try again later ");
+                        window.location.href = "/Booking/Index";
+                    } else {
+                        alert("Error While Save Booking ,, Please Try Again Later ...  ! ");
+                        window.location.href = "/Booking/Index";
+                    }
+                }
+            });
+        }
+    }
+</script>

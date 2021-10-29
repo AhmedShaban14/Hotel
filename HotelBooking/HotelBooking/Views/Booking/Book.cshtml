@@ -1,0 +1,93 @@
+﻿@model HotelBooking.ViewModels.BookingViewModel
+
+@{
+    ViewBag.Title = "Book";
+}
+<h2>Book</h2>
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    @Html.HiddenFor(x => x.BookingHeader.UserID)
+    <hr />
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group" >
+            <div class="col-md-10" style="margin-bottom:10px">
+                @Html.LabelFor(model => model.HotelBrunchesId, htmlAttributes: new { @class = "control-label col-md-2" })
+                @Html.DropDownListFor(model => model.HotelBrunchesId, new SelectList(Model.HotelBrunches, "Id", "Name"), "Choose Hotel Branch ... ", new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-10" style="margin-bottom:10px">
+                @Html.LabelFor(model => model.RoomTypesId, htmlAttributes: new { @class = "control-label col-md-2" })
+                @Html.DropDownListFor(model => model.RoomTypesId, new List<SelectListItem>(), new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-10">
+                @Html.LabelFor(model => model.BookingHeader.BookingDate, htmlAttributes: new { @class = "control-label col-md-2" })
+                @Html.TextBoxFor(model => model.BookingHeader.BookingDate, new { @class = "form-control" })
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div id="RoomTypesIds">
+            <ul class="list-group"></ul>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Create" class="btn btn-default" />
+        </div>
+    </div>
+</div>
+}
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/jquery.validate.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#HotelBrunchesId").change(function () {
+            id = $(this).val();
+            $.ajax({
+                type: "GET",
+                url: "/Booking/GetRoomsForHotelBrunch/" + id,
+                success: function (response) {
+                    $("#RoomTypesId").empty();
+                    $("#RoomTypesId").append("<option>"+  "Choose Room ..." + "</option>");
+                    response.forEach(function (entry) {
+                        $("#RoomTypesId").append("<option value=" + entry.Id + ">" + entry.RoomType.Name + "</option>");
+                      //  AddListOfRoomsIds(id);
+                    });
+                }
+            })
+
+        });
+        $("#RoomTypesId").change(function () {
+            id = $(this).val();
+                $.ajax({
+                    type: "GET",
+                    url: "/Booking/GetSlectedRooms/" + id,
+                    success: function (response) {
+                        $("#RoomTypesIds").append('<ul class="list-group">')
+                        response.forEach(function (entry) {
+                            $("#RoomTypesIds").append('<li class="list-group-item">' + entry.Name + '</li>');
+                        });
+                        $("#RoomTypesIds").append('</ul>')
+
+                    }
+                });
+            })
+        
+    });
+</script>

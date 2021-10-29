@@ -1,0 +1,24 @@
+﻿    <ul class="list-group">
+        <li class="list-group-item active">Choose Rooms You Want ! </li>
+        @foreach (var item in ViewBag.roomList)
+        {
+
+            <li class="list-group-item">
+                <div class="custom-checkbox" id="myDiv">
+                    @if (item.BookStatusId == 1)
+                    {
+                        //Available Room :
+                        <input type="checkbox" id="check_@item.Id" />
+                        <label for="check_@item.Id">@item.HotelBrunch.Name&nbsp;&nbsp;&nbsp;@item.RoomType.Name  </label>
+                    }
+                    else
+                    {
+                        //Already Booked
+                        <input type="checkbox" id="check_@item.Id" checked />
+                        <label for="check_@item.Id">@item.HotelBrunch.Name&nbsp;&nbsp;&nbsp;@item.RoomType.Name  </label>
+                    }
+                </div>
+            </li>
+        }
+    </ul>
+  

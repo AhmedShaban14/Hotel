@@ -1,0 +1,178 @@
+﻿@model HotelBooking.Models.RoomsViewModel
+
+@{
+    ViewBag.Title = "Create New Room";
+}
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+
+<!-- Button trigger modal -->
+<button class="btn btn-primary mt-5" data-toggle="modal" data-target="#myModal">
+    Add New Room
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="myModal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModal">Room's Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @*My Form Here ..*@
+                <form id="myForm" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    <div class="form-group row">
+                        <div class="col-6">
+                            @Html.DropDownListFor(model => model.HotelBrunchId, new SelectList(Model.HotelBrunches, "Id", "Name"), "Choose Hotel Brunch ...", new { @class = "form-control", id = "ddHotelBrunchId" })
+                            @Html.ValidationMessageFor(model => model.HotelBrunchId, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-6">
+                            @Html.DropDownListFor(model => model.RoomTypeId, new SelectList(Model.RoomTypes, "Id", "Name"), "Choose Room Type ...", new { @class = "form-control", id = "ddRoomTypeId" })
+                            @Html.ValidationMessageFor(model => model.RoomTypeId, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-6">
+                            @Html.TextBoxFor(model => model.Room.Description, new { @class = "form-control", id = "RoomDesc", @placeHolder = "Description ..." })
+                            @Html.ValidationMessageFor(model => model.Room.Description, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-6">
+                            @Html.TextBoxFor(model => model.Room.Capacity, new { @class = "form-control", id = "txtRoomCapacity", @placeHolder = "Capacity ...", type = "number" })
+                            @Html.ValidationMessageFor(model => model.Room.Capacity, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-6">
+                            @Html.TextBoxFor(model => model.Room.Salary, new { @class = "form-control", id = "txtRoomSalary", @placeHolder = "Salary ...", type = "number" })
+                            @Html.ValidationMessageFor(model => model.Room.Salary, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-6">
+                            <input type="file" name="ImageUrl" id="imgBrowse" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-6" id="imgPreview" style="display:none">
+                            <img class="img-thumbnail" id="imgTarget" style="width:200px;height:200px" />
+                            <div class="figure-caption">
+                                <a href="#" onclick="ClearPreview()"> <i class="fas fa-trash"></i></a>
+                                <p id="description"></p>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" form="myForm" id="btnSubmit" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+<script>
+    $(document).ready(function () {
+        $("#btnSubmit").click(function () {
+            if (!$("#myForm").valid()) {
+                return false;
+            }
+            else {
+                SaveFormData();
+            }
+
+        });
+        $("#imgBrowse").change(function () {
+
+            var file = this.files;
+            if (file && file[0]) {
+                ReadImage(file[0]);
+            }
+        });
+    });
+    // Get Data From Form Using formData :
+    var SaveFormData = function () {
+        //var data = $("#myForm").serialize();
+        //formData Way ..
+        var formData = new FormData();
+        formData.append("HotelBrunchId", $("#ddHotelBrunchId").val());
+        formData.append("RoomTypeId", $("#ddRoomTypeId").val());
+        formData.append("Room.Description", $("#RoomDesc").val());
+        formData.append("Room.Capacity", $("#txtRoomCapacity").val());
+        formData.append("Room.Salary", $("#txtRoomSalary").val());
+        formData.append("ImageUrl", $("#imgBrowse").get(0).files[0]);
+        $.ajax({
+            // async: true,
+            //dataType: 'json',
+            type: 'POST',
+            url: "/Rooms/New",
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (response) {
+                debugger
+                if (response.result == 1) {
+                    window.location.href = "/Rooms/Index";
+                } else if (response.result == 0) {
+                    return false;
+                }
+            }
+
+        });
+    }
+    var ReadImage = function (file) {
+        var reader = new FileReader;
+        var image = new Image;
+
+        reader.readAsDataURL(file);
+        reader.onload = function (_file) {
+            image.src = _file.target.result;
+            image.onload = function () {
+                var height = this.height;
+                var width = this.width;
+                var type = file.type;
+                var size = ~~(file.size / 1024) + " KB ";
+
+                $("#imgPreview").show();
+                $("#imgTarget").attr('src', _file.target.result);
+                $("#description").text("Size: " + size + " Height :" + height + " Width :" + width + " Type :" + type);
+
+            }
+        }
+    }
+    var ClearPreview = function () {
+        $("#imgBrowse").val('');
+        $("#imgPreview").hide();
+        $("#description").text("");
+    }
+    //Add Using Serialize Way (OLD Fashion) :
+        //var SaveFormData = function () {
+        //    //Get Data From Form Using Serialize :
+        //    var data = $("#myForm").serialize();
+        //    $.ajax({
+        //        type: "POST",
+        //        url: "/Rooms/Index",
+        //        data: data,
+        //        success: function (result) {
+        //            if (result == 1) {
+        //                debugger
+        //                window.location.href = "/Rooms/Index";
+        //            } else if (result == 0) {
+        //                return false;
+        //            }
+        //        }
+
+        //    });
+        //}
+</script>
